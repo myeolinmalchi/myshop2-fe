@@ -1,9 +1,9 @@
 <script lang="ts">
-    import { onMount } from "svelte";
-    import { match, P } from "ts-pattern";
+    import { onMount } from 'svelte';
+    import { match, P } from 'ts-pattern';
     export let productId: number;
 
-    let product: object;
+    export let product: object;
     let items: array;
     onMount(async () => {
         const res = await fetch(`api/v1/product/${productId}`);
@@ -13,7 +13,7 @@
 
     $: priceWithComma = product?.price
         ?.toString()
-        ?.replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",");
+        ?.replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ',');
 
     let selectedItems = [];
     $: surcharges = selectedItems?.map((itemId) => {
@@ -27,7 +27,7 @@
     $: totPrice = (product?.price + surcharge) * quantity;
     $: totPriceWithComma = totPrice
         ?.toString()
-        ?.replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ",");
+        ?.replace(/\B(?<!\.\d*)(?=(\d{3})+(?!\d))/g, ',');
 
     let quantity: number = 1;
     const addQuantity = () => {
@@ -38,35 +38,34 @@
     };
 
     const addCart = async () => {
-        const userId: string = localStorage.getItem("userId");
-        const token: string = localStorage.getItem("JwtToken");
+        const userId: string = localStorage.getItem('userId');
+        const token: string = localStorage.getItem('token');
         const res = await fetch(`api/v1/user/${userId}/cart`, {
-            method: "POST",
+            method: 'POST',
             headers: {
-                "Content-Type": "application/json",
-                "Data-Type": "json",
-                Authorization: token,
+                'Content-Type': 'application/json',
+                ...(token && { Authorization: token }),
             },
             body: JSON.stringify({
-                userId,
+                ...(userId && { userId }),
                 productId: Number(productId),
                 quantity,
                 itemList: selectedItems,
             }),
         });
         match(res)
-            .with({ status: 201 }, () => alert("상품이 장바구니에 담겼습니다."))
+            .with({ status: 201 }, () => alert('상품이 장바구니에 담겼습니다.'))
             .with({ status: 400 }, () =>
-                alert("상품을 장바구니에 담지 못했습니다.")
+                alert('상품을 장바구니에 담지 못했습니다.'),
             )
             .with({ status: 403 }, async () => {
                 const jsonBody = await res.json();
                 alert(
-                    `상품의 재고가 부족합니다!(남은 재고: ${jsonBody.stock})`
+                    `상품의 재고가 부족합니다!(남은 재고: ${jsonBody.stock})`,
                 );
             })
             .with({ status: 409 }, () =>
-                alert("상품을 장바구니에 담지 못했습니다.")
+                alert('상품을 장바구니에 담지 못했습니다.'),
             )
             .exhaustive();
     };
@@ -104,30 +103,24 @@
             <article class="product_order">
                 <div class="order_tit-box">
                     <h2 class="product-name">{product.name}</h2>
-                    <p class="review-total">
-                        <!-- 별 넣을곳 -->
-                        {#if product.rating !== 0}
-                            {#each Array(product.rating / 2) as _}
-                                <i class="bi bi-star-fill text-warning" />
-                            {/each}
-                            {#if product.rating % 2 === 1}
-                                <i class="bi bi-star-half text-warning" />
-                            {/if}
-                            {#each Array(5 - product.rating / 2 - (product.rating % 2)) as _}
-                                <i class="bi bi-star-fill text-warning" />
-                            {/each}
-                            <span class="total-count"
-                                >{product.reviewCount} 상품평</span
+                    <p class="rating_star">
+                        {#if product.rating}
+                            <span class="star">
+                                <b
+                                    class="rating"
+                                    style="width:{product.rating * 20}%"
+                                />
+                            </span>
+                            <span class="rating-total-count"
+                                >{product.reviewCount}개 리뷰</span
                             >
                         {:else}
-                            <span class="total-count">리뷰 없음</span>
+                            <span class="rating-total-count"> 리뷰 없음 </span>
                         {/if}
                     </p>
                 </div>
 
                 <div class="product_price">
-                    <input type="hidden" value="@product.price" name="price" />
-                    <!-- <p id="price">@product.price 원</p> -->
                     <p id="price">{priceWithComma} 원</p>
                 </div>
 
@@ -204,7 +197,239 @@
     </section>
 {/if}
 
-<style>
-    @import "stylesheets/product-details.css";
-    @import "stylesheets/common.css";
+<style global>
+    @charset "utf-8";
+    body {
+        color: #333;
+    }
+
+    button {
+        cursor: pointer;
+    }
+
+    .header,
+    .footer {
+        width: 100%;
+        height: 160px;
+        line-height: 160px;
+        font-size: 30px;
+        background-color: #eee;
+        text-align: center;
+    }
+
+    .footer {
+        margin-top: 80px;
+    }
+
+    .container .product_top-info {
+        margin-top: 40px;
+    }
+    .container .product_top-info .inner {
+        display: flex;
+    }
+
+    .product_top-info .product_thum {
+        display: flex;
+        width: 50%;
+    }
+
+    .product_thum .thum_img-list ul li {
+        width: 70px;
+        cursor: pointer;
+    }
+    .product_thum .thum_img-list ul li ~ li {
+        margin-top: 8px;
+    }
+
+    .product_thum .thum_img-list ul li.active {
+        outline: 2px solid #eee;
+    }
+
+    .product_thum .thum_img-list li img {
+        width: 100%;
+    }
+
+    .thum_main-img {
+        max-width: 500px;
+        margin-left: 16px;
+        flex-shrink: 1;
+    }
+    .thum_main-img img {
+        width: 100%;
+    }
+
+    .product_top-info .product_order {
+        width: 50%;
+        padding-left: 16px;
+        box-sizing: border-box;
+    }
+
+    .product_order > div {
+        padding: 16px 0;
+    }
+
+    .product_order .order_tit-box {
+        line-height: 1.8;
+
+        border-bottom: 1px solid #ddd;
+    }
+    .order_tit-box .product-name {
+        margin-left: 5px;
+        font-size: 23px;
+    }
+
+    .order_tit-box .rating_star {
+        margin-left: 4px;
+
+        height: 24px;
+    }
+
+    .order_tit-box .rating_star * {
+        display: block;
+        height: 100%;
+        float: left;
+    }
+
+    .order_tit-box .rating_star .star {
+        width: 120px;
+        background: url(../images/ico_star-grey.png) repeat-x left center;
+    }
+
+    .order_tit-box .rating_star .star .rating {
+        width: 0;
+        background: url(../images/ico_star-yellow.png) repeat-x left center;
+        font-size: 0;
+    }
+
+    .order_tit-box .rating_star .rating-total-count {
+        color: var(--acent-color);
+        font-weight: bold;
+        font-size: 16px;
+        margin-left: 8px;
+        background-color: #fff;
+
+        vertical-align: top;
+    }
+
+    .product_order .product_price {
+        font-size: 20px;
+        font-weight: 600;
+        color: var(--price-color);
+
+        border-bottom: 1px solid #ddd;
+    }
+
+    .product_order .product_option-box {
+        border-bottom: 1px solid #ddd;
+    }
+
+    .product_order .product_option-box .option {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 16px;
+    }
+
+    .product_order .product_option-box .option ~ .option {
+        margin-top: 16px;
+    }
+
+    .option select {
+        -moz-appearance: none;
+        -webkit-appearance: none;
+        appearance: none;
+
+        flex-grow: 1;
+        padding: 12px;
+        border-radius: 4px;
+        outline: none;
+    }
+    .option select:focus {
+        border: 1px solid var(--acent-color);
+        outline: 1px solid var(--acent-color);
+    }
+    .product_order .total-price {
+        display: flex;
+        justify-content: space-between;
+    }
+
+    /*  --------------------  주문 버튼들 ------------------- */
+
+    .product_order .order-btn-grp {
+        display: flex;
+        justify-content: flex-end;
+        gap: 8px;
+        border-bottom: none;
+    }
+    .order-btn-grp button {
+        background-color: #fff;
+        border: none;
+        line-height: 48px;
+        letter-spacing: -0.6px;
+
+        font-weight: 600;
+        cursor: pointer;
+    }
+
+    .order-btn-grp .order_count {
+        display: flex;
+        justify-content: space-between;
+    }
+    .order_count button {
+        width: 40px;
+        border: 2px solid #ddd;
+    }
+
+    .order_count button:hover {
+        color: var(--acent-color);
+        border-color: var(--acent-color);
+    }
+
+    button.count_minus-btn {
+        border-top-left-radius: 4px;
+        border-bottom-left-radius: 4px;
+    }
+    button.count_plus-btn {
+        border-top-right-radius: 4px;
+        border-bottom-right-radius: 4px;
+    }
+
+    .order_count input.count-number {
+        width: 64px;
+        text-align: center;
+        outline: none;
+        border: none;
+        border-top: 2px solid #ddd;
+        border-bottom: 2px solid #ddd;
+    }
+
+    .order_count input[type='number']::-webkit-outer-spin-button,
+    .order_count input[type='number']::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+
+    .order-btn-grp .buy-now_btn,
+    .order-btn-grp .add-cart_btn {
+        width: 160px;
+        border-radius: 4px;
+    }
+
+    .order-btn-grp .add-cart_btn {
+        border: 2px solid #ddd;
+    }
+
+    .order-btn-grp .buy-now_btn {
+        background-color: #ddd;
+    }
+
+    .order-btn-grp .add-cart_btn:hover {
+        border-color: var(--acent-color);
+        color: var(--acent-color);
+    }
+
+    .order-btn-grp .buy-now_btn:hover {
+        background-color: var(--acent-color);
+        color: #fff;
+    }
 </style>

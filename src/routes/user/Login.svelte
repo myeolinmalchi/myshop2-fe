@@ -9,7 +9,6 @@
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
-                "Data-Type": "json",
             },
             body: JSON.stringify({
                 userId: userId,
@@ -20,7 +19,7 @@
         match(res)
             .with({ status: 200 }, () => {
                 const token = res.headers.get("Authorization");
-                localStorage.setItem("JwtToken", token);
+                localStorage.setItem("token", token);
                 localStorage.setItem("userId", userId);
                 push("/");
             })
@@ -47,7 +46,7 @@
                     if (response.status === 200) {
                         const token: string =
                             response.headers.get("Authorization");
-                        localStorage.setItem("JwtToken", token);
+                        localStorage.setItem("token", token);
                         localStorage.setItem("userId", json.userId);
                         push("/");
                     } else if (response.status === 401) {

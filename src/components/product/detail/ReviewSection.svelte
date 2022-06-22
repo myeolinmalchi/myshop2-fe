@@ -1,7 +1,8 @@
-<script>
-    export let productId;
+<script lang="ts">
+    export let productId: number;
     export let review;
-    import { onMount } from "svelte";
+    export let product: object;
+    import { onMount } from 'svelte';
 
     let reviews;
     let page;
@@ -22,7 +23,7 @@
 
     const setPage = async (page) => {
         const res = await fetch(
-            `api/v1/product/${productId}/reviews?page=${page}`
+            `api/v1/product/${productId}/reviews?page=${page}`,
         );
         const jsonBody = await res.json();
         reviews = jsonBody.reviews.map((review) => {
@@ -42,7 +43,101 @@
         if (page > 1) setPage(page - 1);
     };
 
-    let currentDetailImage = "";
+    let currentDetailImage: string = '';
+
+    let reviewWrite: boolean = false;
+
+    let reviewProductInfo;
+
+    const writeReviewCheck = async () => {
+        const token = localStorage.getItem('token');
+        const userId = localStorage.getItem('userId');
+        if (!token || !userId) {
+            alert('로그인 후 이용 가능합니다.');
+            return;
+        }
+        const res = await fetch(
+            `api/v1/user/${userId}/product/${productId}/info`,
+            {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: token,
+                },
+            },
+        );
+        if (res.status === 404) {
+            alert('구매내역이 없습니다.');
+        } else if (res.status === 401) {
+            alert('로그인 후 이용 가능합니다.');
+            localStorage.clear();
+        } else if (res.status === 200) {
+            reviewProductInfo = await res.json();
+            reviewWrite = true;
+        }
+    };
+
+    let images: array = [];
+    $: images;
+
+    function getBase64(file) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = (error) => reject(error);
+        });
+    }
+
+    const onFileSelected = async (e) => {
+        const image = e.target.files[0];
+        const imageStr = await getBase64(image);
+        images = [...images, imageStr]
+    };
+
+    let rating: number;
+    let title: string;
+    let content: string;
+
+    const writeReview = async () => {
+        if(images.length === 0) {
+            alert("이미지를 하나 이상 업로드 해야합니다!")
+            return
+        }
+        const userId = localStorage.getItem('userId');
+        const token = localStorage.getItem('token');
+        if (userId && token) {
+            const res = await fetch(`api/v1/user/${userId}/review`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: token,
+                },
+                body: JSON.stringify({
+                    productId: Number(productId),
+                    userId,
+                    rating,
+                    title,
+                    content,
+                    images,
+                    orderProductId: reviewProductInfo.orderProductId
+                }),
+            });
+
+            if (res.status === 201) {
+                alert("리뷰가 작성되었습니다.")
+                reviewWrite = false;
+                images = [];
+            } else if (res.status === 400) {
+                alert("리뷰 작성에 실패했습니다.")
+            } else if (res.status === 401) {
+                alert("로그인이 필요합니다.")
+                reviewWrite = false;
+                images = [];
+                localStorage.clear();
+            }
+        }
+    };
 </script>
 
 {#if reviews}
@@ -52,20 +147,156 @@
             <p class="section-tit-des">
                 - 상품을 구매한 다른 사람들의 리뷰를 살펴보세요
             </p>
+            <button class="write-review-btn" on:click={writeReviewCheck}>
+                리뷰쓰기
+            </button>
         </div>
 
+        {#if reviewWrite}
+            <!-- 리뷰작성창 -->
+            <div class="review-layer">
+                <div class="write-review">
+                    <h2 class="form-title">리뷰 작성하기</h2>
+                    <div class="review-form-wrap">
+                        <div class="product-info">
+                            <div class="product-thum">
+                                <img
+                                    src={product.thumbnail}
+                                    alt="임시 썸네일"
+                                />
+                            </div>
+                            <h3 class="product-name">
+                                {product.name}
+                                <p class="option-name">
+                                    {#each reviewProductInfo.details as detail}
+                                        {detail.name + ' '}
+                                    {/each}
+                                </p>
+                            </h3>
+                        </div>
+
+                        <form action="#" method="post">
+                            <fieldset class="star_rating">
+                                <legend>별점주기</legend>
+
+                                <h3 class="stars-title">상품은 괜찮았나요?</h3>
+                                <div class="stars">
+                                    <input
+                                        type="radio"
+                                        id="star_5"
+                                        bind:group={rating}
+                                        value={5}
+                                        name="star-rating"
+                                    /><label for="star_5">5점</label>
+                                    <input
+                                        type="radio"
+                                        id="star_4"
+                                        bind:group={rating}
+                                        value={4}
+                                        name="star-rating"
+                                    />
+                                    <label for="star_4">4점</label>
+                                    <input
+                                        type="radio"
+                                        id="star_3"
+                                        bind:group={rating}
+                                        value={3}
+                                        name="star-rating"
+                                    /><label for="star_3">3점</label>
+                                    <input
+                                        type="radio"
+                                        id="star_2"
+                                        bind:group={rating}
+                                        value={2}
+                                        name="star-rating"
+                                    /><label for="star_2">2점</label>
+
+                                    <input
+                                        type="radio"
+                                        id="star_1"
+                                        bind:group={rating}
+                                        value={1}
+                                        name="star-rating"
+                                    /><label for="star_1">1점</label>
+                                </div>
+                            </fieldset>
+
+                            <fieldset class="write-my-review">
+                                <legend>리뷰 내용 작성</legend>
+                                <label>
+                                    <h3 class="input-name">제목</h3>
+                                    <input
+                                        type="text"
+                                        name="review-title"
+                                        required
+                                        placeholder="20글자 이내로 제목을 작성해 주세요"
+                                        maxlength="20"
+                                        bind:value={title}
+                                    />
+                                </label>
+
+                                <label>
+                                    <h3 class="input-name">내용</h3>
+                                    <textarea
+                                        name="review-context"
+                                        required
+                                        placeholder="리뷰를 적어주세요!"
+                                        bind:value={content}
+                                    />
+                                </label>
+                            </fieldset>
+
+                            <fieldset class="upload-photo">
+                                <legend>리뷰 사진 등록</legend>
+                                <div class="add-photo">
+                                    <label for="uploadPhoto"
+                                        >사진 첨부하기 +</label
+                                    >
+                                    <input
+                                        type="file"
+                                        name="review-images"
+                                        accept=".jpg,.png,.jpeg"
+                                        multiple
+                                        id="uploadPhoto"
+                                        on:change={(e) => onFileSelected(e)}
+                                    />
+                                </div>
+                                <ul>
+                                    <!-- 추가되면 li>img를 추가해서 보일 수 있게 하면 좋을것 같아요! -->
+                                    {#each images as image, idx}
+                                        <li><img src={image} alt={idx}/></li>
+                                    {/each}
+                                </ul>
+                            </fieldset>
+                            <div class="form-btn-wrap">
+                                <button
+                                    class="close-btn"
+                                    on:click={() => {
+                                        reviewWrite = false
+                                        images = [];
+                                    }
+                                    }
+                                >
+                                    취소
+                                </button>
+                                <input type="button" on:click={writeReview} value="등록" />
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <!-- //리뷰작성창 -->
+        {/if}
         <div class="review-grp">
             {#each reviews as review, index}
                 <article class="user-review">
                     <div class="review_top-box">
-                        <h3 class="review_tit">리뷰 제목</h3>
+                        <h3 class="review_tit">{review.title}</h3>
                         <div class="review_info">
                             <!-- 별은 아이콘으로 대체 -->
                             <p class="review_stars">
-                                <span>★</span><span>★</span><span>★</span><span
-                                    >★</span
-                                >
-                                <span>★</span>
+                                <span class="star_rating" style="width:{review.rating * 20}%">
+                                </span>
                             </p>
                             <!-- 별은 아이콘으로 대체 -->
                             <span class="review_product-info"
@@ -83,17 +314,6 @@
                                 {review.content}
                             </p>
                             <div class="review_btn-group">
-                                <button class="recomend-btn">
-                                    <!-- 추천버튼을 누른 뒤 icon -->
-                                    <!-- <img src="img/ico-solid_review-recomend.png" alt="내가 추천한 리뷰"> -->
-                                    <!-- 추천버튼 누르기 전 icon -->
-                                    <img
-                                        src="/images/ico-line_review-recomend.png"
-                                        alt="이 리뷰 추천하기"
-                                    />
-                                    <!-- 추천 수 -->
-                                    <span>{review.recommend}</span>
-                                </button>
                                 <a href="#" class="read-more-btn"
                                     >리뷰 내용 더보기 >>
                                 </a>
@@ -104,6 +324,7 @@
                             on:click={() => {
                                 reviewDetailsShown[index] =
                                     !reviewDetailsShown[index];
+                                currentDetailImage = review.images[0]?.image
                             }}
                         >
                             <!-- 
@@ -122,8 +343,6 @@
                     {#if reviewDetailsShown[index]}
                         <div class="review-detail">
                             <div class="content-box">
-                                <button class="prev-btn" />
-                                <button class="next-btn" />
                                 <button
                                     class="close-btn"
                                     on:click={() =>
@@ -136,7 +355,7 @@
                                         <img src={currentDetailImage} alt="1" />
                                     </div>
                                     <ul>
-                                        {#each review.images as image}
+                                        {#each review.images as image, index}
                                             <li>
                                                 <img
                                                     src={image.image}
@@ -159,8 +378,7 @@
 
         <div class="pager">
             <div class="btn-grp prev-btn">
-                <button>&lt;&lt;</button>
-                <button>&lt;</button>
+                <button on:click={subPage}>&lt;</button>
             </div>
             <ul>
                 {#each Array(pageCount) as _, index}
@@ -172,9 +390,236 @@
                 {/each}
             </ul>
             <div class="btn-grp next-btn">
-                <button on:click={subPage}>&gt;</button>
-                <button on:click={addPage}>&gt;&gt;</button>
+                <button on:click={addPage}>&gt;</button>
             </div>
         </div>
     </section>
 {/if}
+
+<style global>
+    .review-layer {
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.6);
+
+        position: fixed;
+        top: 0;
+        left: 0;
+        z-index: 999999;
+
+        display: flex;
+        justify-content: center;
+        overflow-y: scroll;
+    }
+
+    .review-layer::-webkit-scrollbar {
+    }
+
+    .write-review .form-title {
+        margin-top: 24px;
+        padding: 16px 0;
+        border-radius: 8px;
+        background-color: #eee;
+
+        text-align: center;
+    }
+
+    .write-review .review-form-wrap {
+        margin: 24px 0;
+        padding: 40px;
+        border-radius: 24px;
+        background-color: #fff;
+    }
+
+    .write-review .review-form-wrap .product-info {
+        margin: 0 auto;
+        max-width: 400px;
+
+        display: flex;
+        align-items: center;
+        gap: 16px;
+    }
+    .write-review .product-info .product-thum {
+        min-width: 80px;
+        height: 80px;
+        overflow: hidden;
+        border: 1px solid #ddd;
+
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+    .write-review .product-info .product-thum img {
+        width: auto;
+        height: auto;
+        max-width: 100%;
+        max-height: 100%;
+    }
+    .write-review .product-info .product-name {
+        word-break: keep-all;
+        font-size: 1rem;
+    }
+    .write-review .product-info .product-name .option-name {
+        font-weight: 400;
+        color: #999;
+    }
+
+    .write-review .review-form-wrap form > fieldset {
+    }
+
+    .write-review .review-form-wrap form .star_rating {
+        margin-top: 16px;
+        background-color: rgb(250, 250, 250);
+        padding: 24px;
+        border-radius: 16px;
+    }
+    .write-review .star_rating .stars-title {
+        text-align: center;
+    }
+    .write-review .star_rating .stars {
+        margin-top: 16px;
+
+        display: flex;
+        justify-content: center;
+        flex-direction: row-reverse;
+        gap: 8px;
+    }
+
+    .write-review .star_rating .stars input {
+        display: none;
+    }
+    .write-review .star_rating .stars label {
+        width: 32px;
+        height: 32px;
+        display: block;
+        font-size: 0;
+        cursor: pointer;
+
+        background: url(../images/ico_star-grey.png) no-repeat center/ auto 100%;
+    }
+
+    .write-review .star_rating .stars input:hover ~ label {
+        background: url(../images/ico_star-yellow.png) no-repeat center/ auto
+            100%;
+    }
+
+    .write-review .star_rating .stars input[type='radio']:checked ~ label {
+        background: url(../images/ico_star-yellow.png) no-repeat center/ auto
+            100%;
+    }
+
+    .write-review .write-my-review label {
+        width: 432px;
+        margin-top: 24px;
+        line-height: 18px;
+        font-size: 18px;
+
+        display: block;
+    }
+
+    .write-review .write-my-review label .input-name {
+        margin-bottom: 16px;
+    }
+    .write-review .write-my-review label input,
+    .write-review .write-my-review label textarea {
+        width: 100%;
+        padding: 16px;
+        border-radius: 4px;
+        outline: none;
+        border: 1px solid #666;
+        box-sizing: border-box;
+        font-size: 1rem;
+    }
+    .write-review .write-my-review label textarea {
+        min-width: 100%;
+        max-width: 100%;
+        min-height: 180px;
+        max-height: 180px;
+    }
+
+    .write-review .upload-photo .add-photo label {
+        margin-top: 24px;
+        display: block;
+        padding: 16px;
+        border-radius: 4px;
+        text-align: center;
+        border: 2px dashed #ddd;
+
+        font-size: 1rem;
+        cursor: pointer;
+    }
+    .add-photo:firs .write-review .upload-photo .add-photo label:hover {
+        border-color: #aaa;
+    }
+
+    .write-review .upload-photo .add-photo input {
+        display: none;
+    }
+
+    .write-review .upload-photo ul {
+        display: flex;
+        gap: 8px;
+        margin-top: 16px;
+    }
+    .write-review .upload-photo ul li {
+        width: 80px;
+        height: 80px;
+        background-color: #eee;
+        border-radius: 4px;
+        overflow: hidden;
+        cursor: pointer;
+    }
+
+    .write-review .upload-photo ul li:hover {
+        outline: 2px solid #999;
+    }
+
+    .write-review .upload-photo ul li img {
+        width: auto;
+        height: auto;
+        max-width: 100%;
+        max-height: 100%;
+    }
+    .write-review .upload-photo .upload-notify {
+        font-size: 0.825rem;
+        margin-top: 8px;
+    }
+
+    .write-review .review-form-wrap .form-btn-wrap {
+        margin-top: 40px;
+        display: flex;
+        justify-content: center;
+        gap: 8px;
+    }
+
+    .write-review .review-form-wrap .form-btn-wrap input[type='submit'],
+    .write-review .review-form-wrap .form-btn-wrap .close-btn {
+        display: block;
+        width: 120px;
+        line-height: 48px;
+
+        border-radius: 4px;
+
+        font-weight: bold;
+        font-size: 1rem;
+        letter-spacing: -0.6px;
+    }
+    .write-review .review-form-wrap .form-btn-wrap .close-btn {
+        background-color: transparent;
+        border: 2px solid #ddd;
+    }
+    .write-review .review-form-wrap .form-btn-wrap .close-btn:hover {
+        border-color: #999;
+    }
+
+    .write-review .review-form-wrap .form-btn-wrap input[type='submit'] {
+        border: none;
+        background-color: #ddd;
+        cursor: pointer;
+    }
+
+    .write-review .review-form-wrap .form-btn-wrap input[type='submit']:hover {
+        background-color: #999;
+        color: #fff;
+    }
+</style>

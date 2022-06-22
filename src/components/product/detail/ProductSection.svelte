@@ -274,7 +274,6 @@
         border-bottom: 1px solid #ddd;
     }
     .order_tit-box .product-name {
-        margin-left: 5px;
         font-size: 23px;
     }
 

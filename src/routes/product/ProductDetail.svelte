@@ -5,8 +5,6 @@
     import ReviewSection from '../../components/product/detail/ReviewSection.svelte';
     import QnaSection from '../../components/product/detail/QnaSection.svelte';
     import Header from '../../components/Header.svelte';
-    import '../../../public/build/stylesheets/product-details.css';
-    import '../../../public/build/stylesheets/common.css';
 
     export let params = {};
 

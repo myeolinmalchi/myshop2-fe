@@ -3,17 +3,20 @@
     import { match } from 'ts-pattern';
     import { URL } from '../../store.ts';
 
-    let userId: string;
-    let userPw: string;
+    let sellerId: string;
+    let sellerPw: string;
     const login = async () => {
-        const res = await fetch(`${URL}/api/v1/user/login`, {
+        const res = await fetch(`${URL}/api/v1/seller/login`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-                userId: userId,
-                userPw: userPw,
+                sellerId,
+                sellerPw,
+                name: '',
+                email: '',
+                phonenumber: '',
             }),
         });
 
@@ -21,45 +24,13 @@
             .with({ status: 200 }, () => {
                 const token = res.headers.get('Authorization');
                 localStorage.setItem('token', token);
-                localStorage.setItem('userId', userId);
-                push('/');
+                localStorage.setItem('sellerId', sellerId);
+                push('/seller');
             })
             .with({ status: 400 }, () => alert('올바르지 않은 요청입니다.'))
             .with({ status: 401 }, () => alert('비밀번호가 일치하지 않습니다.'))
             .with({ status: 404 }, () => alert('존재하지 않는 계정입니다.'))
             .exhaustive();
-    };
-
-    const kakaoLogin = async () => {
-        Kakao.Auth.login({
-            success: (authObj) => {
-                fetch(`${URL}/api/v1/user/login/kakao`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Data-Type': 'json',
-                    },
-                    body: JSON.stringify({
-                        access_token: authObj.access_token,
-                    }),
-                }).then(async (response) => {
-                    const json = await response.json();
-                    if (response.status === 200) {
-                        const token: string =
-                            response.headers.get('Authorization');
-                        localStorage.setItem('token', token);
-                        localStorage.setItem('userId', json.userId);
-                        push('/');
-                    } else if (response.status === 401) {
-                        alert('추가 정보를 입력하여 회원가입을 완료하세요.');
-                        registerVar.userId = json.id;
-                        registerVar.userPw = '';
-                        registerVar.email = json.email;
-                    }
-                });
-            },
-            fail: (err) => alert(JSON.stringify(err)),
-        });
     };
 </script>
 
@@ -83,7 +54,7 @@
                         placeholder="ID"
                         id="id"
                         class="account"
-                        bind:value={userId}
+                        bind:value={sellerId}
                     />
                 </div>
             </div>
@@ -95,7 +66,7 @@
                         placeholder="Password"
                         id="password"
                         class="account"
-                        bind:value={userPw}
+                        bind:value={sellerPw}
                     />
                 </div>
             </div>
@@ -107,21 +78,6 @@
             </div>
             <div class="sign-in-wrap">
                 <button on:click={() => push('/regist')}>회원가입</button>
-            </div>
-            <div class="sign-in-kakao">
-                <button on:click={kakaoLogin}
-                    ><img
-                        src="https://www.nicepng.com/png/full/388-3888984_open-png.png"
-                        width="20"
-                        height="20"
-                    /> 카카오 로그인/ 회원가입</button
-                >
-            </div>
-            <div class="login-stay-sign-in">
-                <div class="stay_signlogo">
-                    <i class="far fa-check-square" />
-                    <span>로그인 상태유지</span>
-                </div>
             </div>
         </section>
     </div>

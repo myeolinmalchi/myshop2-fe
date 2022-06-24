@@ -1,5 +1,6 @@
 <script lang="ts">
     import { onMount } from 'svelte';
+    import { URL } from '../../../store.ts';
     export let productId: number;
     export let qna;
 
@@ -8,7 +9,7 @@
     let page;
     let pageCount;
     onMount(async () => {
-        const res = await fetch(`api/v1/product/${productId}/qnas`);
+        const res = await fetch(`${URL}/api/v1/product/${productId}/qnas`);
         const jsonBody = await res.json();
         qnas = jsonBody.qnas.map((qna) => {
             const questionDate = new Date(qna.questionDate);
@@ -23,7 +24,7 @@
 
     const setPage = async (page) => {
         const res = await fetch(
-            `api/v1/product/${productId}/qnas?page=${page}`,
+            `${URL}/api/v1/product/${productId}/qnas?page=${page}`,
         );
         const jsonBody = await res.json();
         qnas = jsonBody.qnas.map((qna) => {
@@ -31,7 +32,7 @@
             const answerDate = new Date(qna.answerDate);
             qna.questionDate = questionDate.toLocaleString();
             qna.answerDate = answerDate?.toLocaleString();
-            return qna
+            return qna;
         });
         page = jsonBody.page;
         pageCount = jsonBody.pageCount;
@@ -60,7 +61,7 @@
         const token = localStorage.getItem('token');
         const userId = localStorage.getItem('userId');
         if (userId) {
-            const res = await fetch(`api/v1/user/${userId}/qna`, {
+            const res = await fetch(`${URL}/api/v1/user/${userId}/qna`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -93,7 +94,7 @@
             <p class="section-tit-des">
                 - 문의 혹은 주문이 많을 경우 답에 다소 시간이 지연될 수 있습니다
             </p>
-            <span href="#" class="write-qna-btn">문의하기</span>
+            <button class="write-qna-btn" on:click={qnaPopup}>문의하기</button>
         </div>
 
         {#if qnaWrite}
@@ -106,7 +107,7 @@
                     <h2 class="section-tit">문의하기</h2>
 
                     <div class="form-wrap">
-                    <fieldset>
+                        <fieldset>
                             <legend>문의하기</legend>
 
                             <div class="qna-content">
@@ -120,7 +121,9 @@
                             </div>
                         </fieldset>
 
-                        <button class="qna-submit" on:click={writeQna}>문의남기기</button>
+                        <button class="qna-submit" on:click={writeQna}
+                            >문의남기기</button
+                        >
                     </div>
                 </div>
             </div>
@@ -159,7 +162,11 @@
             </div>
             <ul>
                 {#each Array(pageCount) as _, index}
-                    <li><button on:click={() => setPage(index+1)}>{index + 1}</button></li>
+                    <li>
+                        <button on:click={() => setPage(index + 1)}
+                            >{index + 1}</button
+                        >
+                    </li>
                 {/each}
             </ul>
             <div class="btn-grp next-btn">
@@ -168,24 +175,3 @@
         </div>
     </section>
 {/if}
-
-<style global>
-
-    .write-qna .qna-submit {
-      display: block;
-      width: 120px;
-      line-height: 48px;
-      margin: 48px auto 0;
-      border: none;
-      border-radius: 4px;
-      background-color: #ddd;
-
-      font-weight: bold;
-      font-size: 1rem;
-      letter-spacing: -0.6px;
-    }
-    .write-qna .qna-submit:hover {
-      background-color: var(--acent-color);
-      color: #fff;
-    }
-</style>

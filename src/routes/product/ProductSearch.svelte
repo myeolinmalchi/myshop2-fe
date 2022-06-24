@@ -2,6 +2,7 @@
     import ProductBox from '../../components/product/search/ProductBox.svelte';
     import Header from '../../components/Header.svelte';
     import { onMount, afterUpdate, beforeUpdate, tick } from 'svelte';
+    import { URL } from '../../store.ts';
 
     export let params = {};
     let products: array;
@@ -15,7 +16,7 @@
     onMount(async () => {
         category = params.category === '0' ? '' : params.category;
         const res = await fetch(
-            `api/v1/product/search/${params.keyword}?` +
+            `${URL}/api/v1/product/search/${params.keyword}?` +
                 new URLSearchParams({
                     ...(category && { code: category }),
                     ...(page && { page }),
@@ -42,7 +43,7 @@
 
     $: (async function () {
         const res = await fetch(
-            `api/v1/product/search/${params.keyword}?` +
+            `${URL}/api/v1/product/search/${params.keyword}?` +
                 new URLSearchParams({
                     ...(category && { code: category }),
                     ...(page && { page }),

@@ -1,12 +1,13 @@
 <script lang="ts">
     import { onMount } from 'svelte';
     import { match, P } from 'ts-pattern';
+    import { URL } from '../../../store.ts';
     export let productId: number;
 
     export let product: object;
     let items: array;
     onMount(async () => {
-        const res = await fetch(`api/v1/product/${productId}`);
+        const res = await fetch(`${URL}/api/v1/product/${productId}`);
         product = await res.json();
         items = product.optionList.map((option) => option.itemList).flat();
     });
@@ -40,7 +41,7 @@
     const addCart = async () => {
         const userId: string = localStorage.getItem('userId');
         const token: string = localStorage.getItem('token');
-        const res = await fetch(`api/v1/user/${userId}/cart`, {
+        const res = await fetch(`${URL}/api/v1/user/${userId}/cart`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -197,7 +198,7 @@
     </section>
 {/if}
 
-<style global>
+<style>
     @charset "utf-8";
     body {
         color: #333;
@@ -274,7 +275,7 @@
         border-bottom: 1px solid #ddd;
     }
     .order_tit-box .product-name {
-        font-size: 23px;
+        font-size: 18px;
     }
 
     .order_tit-box .rating_star {
@@ -431,4 +432,64 @@
         background-color: var(--acent-color);
         color: #fff;
     }
+    /*  --------------------  //주문 버튼들 ------------------- */
+
+    /* ---------------------- 탭메뉴 콘텐츠 ----------------------*/
+
+    .container .tab-contents {
+        margin-top: 60px;
+    }
+
+    .container .tab-contents section ~ section {
+        margin-top: 80px;
+        padding-top: 80px;
+    }
+
+    .container .tab-contents .product_tab-titles {
+        position: sticky;
+        top: 0;
+        z-index: 888;
+    }
+    .product_tab-titles ul {
+        display: flex;
+    }
+    .product_tab-titles ul li {
+        width: 25%;
+        line-height: 60px;
+        text-align: center;
+
+        background-color: #eee;
+        border-right: 1px solid #ccc;
+        border-bottom: 1px solid #ccc;
+        border-top: 2px solid #999;
+    }
+
+    .product_tab-titles ul li:hover {
+        font-weight: bold;
+    }
+
+    .product_tab-titles ul li:first-child {
+        border-left: 1px solid #ccc;
+    }
+
+    .product_tab-titles ul li.active {
+        background-color: #fff;
+        border-bottom: none;
+        font-weight: bold;
+    }
+
+    .product_tab-titles ul li a {
+        display: block;
+        color: #333;
+    }
+
+    .container .tab-contents .product-detail {
+        display: flex;
+        justify-content: center;
+        padding: 80px 0;
+    }
+    .product-detail img {
+        max-width: 90%;
+    }
+    @import 'stylesheets/common.css';
 </style>

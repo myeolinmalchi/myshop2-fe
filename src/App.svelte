@@ -19,6 +19,11 @@
     // routes for cart
     import Carts from './routes/cart/Carts.svelte';
 
+    // routes for seller
+    import SellerLogin from './routes/seller/Login.svelte';
+    import SellerRegist from './routes/seller/Regist.svelte';
+    import ProductRegist from './routes/seller/ProductRegist.svelte';
+
     const routes = {
         '/': Main,
         '/product/search/:category/:keyword': ProductSearch,
@@ -27,6 +32,9 @@
         '/regist': Regist,
         '/cart': Carts,
         '/mypage': Mypage,
+        '/seller/login': SellerLogin,
+        '/seller/regist': SellerRegist,
+        '/seller/product/regist': ProductRegist,
     };
 </script>
 

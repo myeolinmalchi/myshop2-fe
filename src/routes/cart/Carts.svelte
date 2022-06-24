@@ -1,12 +1,13 @@
 <script lang="ts">
     import { onMount } from 'svelte';
     import { link, push, replace, pop } from 'svelte-spa-router';
+    import { URL } from '../../store.ts';
 
     const refreshCart = async () => {
         let userId = localStorage.getItem('userId');
         let token = localStorage.getItem('token');
         if (userId && token) {
-            const res = await fetch(`api/v1/user/${userId}/cart`, {
+            const res = await fetch(`${URL}/api/v1/user/${userId}/cart`, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
@@ -55,7 +56,7 @@
         const userId = localStorage.getItem('userId');
         const token = localStorage.getItem('token');
         if (userId && token) {
-            const res = await fetch(`api/v1/user/${userId}/order`, {
+            const res = await fetch(`${URL}/api/v1/user/${userId}/order`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -82,7 +83,7 @@
     const deleteCart = async (cartId: number) => {
         let userId = localStorage.getItem('userId');
         let token = localStorage.getItem('token');
-        const res = await fetch(`api/v1/user/${userId}/cart/${cartId}`, {
+        const res = await fetch(`${URL}/api/v1/user/${userId}/cart/${cartId}`, {
             method: 'DELETE',
             headers: {
                 'Content-Type': 'application/json',
@@ -110,7 +111,7 @@
     const updateQuantity = async (cartId: number, quantity: number) => {
         let userId: string = localStorage.getItem('userId');
         let token: string = localStorage.getItem('token');
-        const res = await fetch(`api/v1/user/${userId}/cart/${cartId}`, {
+        const res = await fetch(`${URL}/api/v1/user/${userId}/cart/${cartId}`, {
             method: 'PUT',
             headers: {
                 'Content-Type': 'application/json',
@@ -260,7 +261,7 @@
     </footer>
 </div>
 
-<style global>
+<style>
     @font-face {
         font-family: 'ONE-Mobile-POP';
         src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2105_2@1.0/ONE-Mobile-POP.woff')

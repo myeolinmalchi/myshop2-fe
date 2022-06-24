@@ -1,6 +1,7 @@
 <script lang="ts">
     import { onMount } from 'svelte';
     import { pop } from 'svelte-spa-router';
+    import { URL } from '../../store.ts';
     export let state: string;
 
     const setState = () => {
@@ -24,7 +25,7 @@
         const userId = localStorage.getItem('userId');
         const token = localStorage.getItem('token');
         if (userId && token) {
-            const res = await fetch(`api/v1/user/${userId}/order`, {
+            const res = await fetch(`${URL}/api/v1/user/${userId}/order`, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
@@ -53,8 +54,12 @@
 {#if orders}
     <div class="mypage_container">
         <div class="member-container">
-            <h2 class="mem-check-tit">주문 조회</h2>
+            <h2 class="order-check-tit">주문 조회</h2>
             <div class="tabs">
+                <input id="order-check" type="radio" name="tab_item" checked />
+                <label class="tab_item" for="order-check"
+                    ><span>주문조회</span></label
+                >
                 <input
                     id="profile-info"
                     type="radio"
@@ -62,13 +67,7 @@
                     disabled
                 />
                 <label class="tab_item" for="profile-info"
-                    ><a href="javascript:void(0)" on:click={setState}
-                        >회원정보 관리</a
-                    ></label
-                >
-                <input id="order-check" type="radio" name="tab_item" checked />
-                <label class="tab_item" for="order-check"
-                    ><span>주문조회</span></label
+                    ><span on:click={setState}>회원정보 관리</span></label
                 >
                 <div class="tab_content" id="profile_content">
                     <!-- 회원정보 컨텐츠 부분 -->
@@ -115,23 +114,7 @@
     </div>
 {/if}
 
-<style global>
-    @font-face {
-        font-family: 'Happiness-Sans-Regular';
-        src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2205@1.0/Happiness-Sans-Regular.woff2')
-            format('woff2');
-        font-weight: 400;
-        font-style: normal;
-    }
-
-    @font-face {
-        font-family: 'yg-jalnan';
-        src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_four@1.2/JalnanOTF00.woff')
-            format('woff');
-        font-weight: normal;
-        font-style: normal;
-    }
-
+<style>
     @font-face {
         font-family: 'Happiness-Sans-Title';
         src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2205@1.0/Happiness-Sans-Title.woff2')
@@ -140,16 +123,8 @@
         font-style: normal;
     }
 
-    @font-face {
-        font-family: 'SANJUGotgam';
-        src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2112@1.0/SANJUGotgam.woff')
-            format('woff');
-        font-weight: normal;
-        font-style: normal;
-    }
-
     .header {
-        width: 100%;
+        width: 10%;
         height: 160px;
         line-height: 160px;
         font-size: 30px;
@@ -157,7 +132,7 @@
         text-align: center;
     }
 
-    .mem-check-tit {
+    .order-check-tit {
         text-align: center;
         font-family: 'Happiness-Sans-Title';
         margin: 15px;
@@ -207,6 +182,7 @@
         font-weight: bold;
         transition: all 0.2s ease;
     }
+
     .tab_item:hover {
         opacity: 0.75;
     }
@@ -237,18 +213,6 @@
         color: #fff;
     }
 
-    /* .goods {
-    border: 1px solid #cccccccc;
-    margin:2px;
-   
-    display:flex;
-    align-items: center;
-    
-    justify-content:row;
-   
-
-} */
-
     .goods {
         flex-direction: row;
         display: flex;
@@ -266,6 +230,9 @@
 
     .info {
         flex-direction: row;
+        width: 300px;
+        align-items: center;
+        text-align: center;
     }
 
     .delivery_status {
@@ -279,7 +246,6 @@
         display: flex;
         flex-direction: row;
         align-items: center;
-        justify-content: center;
     }
 
     .delivery-icon {
@@ -289,6 +255,7 @@
     .goods_tit {
         font-weight: bold;
     }
+
     .detail {
         color: green;
     }

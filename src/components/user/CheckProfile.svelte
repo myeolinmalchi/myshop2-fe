@@ -3,6 +3,7 @@
     export let userPw: string;
     import { onMount } from 'svelte';
     import { pop } from 'svelte-spa-router';
+    import { URL } from '../../store.ts';
 
     let userId: string;
     onMount(() => {
@@ -14,7 +15,7 @@
     });
 
     const login = async () => {
-        const res = await fetch(`api/v1/user/login`, {
+        const res = await fetch(`${URL}/api/v1/user/login`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -73,7 +74,7 @@
     </div>
 </div>
 
-<style global>
+<style>
     @font-face {
         font-family: 'Happiness-Sans-Regular';
         src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2205@1.0/Happiness-Sans-Regular.woff2')

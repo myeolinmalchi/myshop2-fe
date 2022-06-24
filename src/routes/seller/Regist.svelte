@@ -2,21 +2,21 @@
     import { match } from 'ts-pattern';
     import { URL } from '../../store.ts';
 
-    let userId: string;
-    let userPw: string;
+    let sellerId: string;
+    let sellerPw: string;
     let name: string;
     let email: string;
     let phonenumber: string;
 
     let error: array = [];
 
-    function checkId(userId: string) {
+    function checkId(sellerId: string) {
         const idPattern = /^[a-z]+[a-z0-9]{5,19}$/;
-        if (userId === undefined || userId === '') {
+        if (sellerId === undefined || sellerId === '') {
             error[0].innerHTML = '필수 정보입니다.';
             error[0].style.display = 'block';
             return false;
-        } else if (!idPattern.test(userId)) {
+        } else if (!idPattern.test(sellerId)) {
             error[0].innerHTML =
                 '5~19자의 영문 소문자, 숫자만 사용 가능합니다.';
             error[0].style.display = 'block';
@@ -27,13 +27,13 @@
         }
     }
 
-    function checkPw(userPw: string) {
+    function checkPw(sellerPw: string) {
         let pwPattern = /^(?=.*\d)(?=.*[a-zA-Z])[0-9a-zA-Z]{8,16}$/;
-        if (userPw === undefined || userPw === '') {
+        if (sellerPw === undefined || sellerPw === '') {
             error[1].innerHTML = '필수 정보입니다.';
             error[1].style.display = 'block';
             return false;
-        } else if (!pwPattern.test(userPw)) {
+        } else if (!pwPattern.test(sellerPw)) {
             error[1].innerHTML =
                 '8~16자 영문 대 소문자, 숫자, 특수문자를 사용하세요.';
             error[1].style.display = 'block';
@@ -94,28 +94,27 @@
 
     const regist = async () => {
         const validation: object = {
-            userId: checkId(userId),
-            userPw: checkPw(userPw),
+            sellerId: checkId(sellerId),
+            sellerPw: checkPw(sellerPw),
             name: checkName(name),
             email: isEmailCorrect(email),
             phone: checkPhoneNum(phonenumber),
         };
         if (
-            validation.userId &&
-            validation.userPw &&
+            validation.sellerId &&
+            validation.sellerPw &&
             validation.name &&
             validation.email &&
             validation.phone
         ) {
-            const res = await fetch(`${URL}/api/v1/user`, {
+            const res = await fetch(`${URL}/api/v1/seller`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Data-Type': 'json',
                 },
                 body: JSON.stringify({
-                    userId,
-                    userPw,
+                    sellerId,
+                    sellerPw,
                     name,
                     email,
                     phonenumber,
@@ -124,6 +123,7 @@
             match(res)
                 .with({ status: 201 }, () => {
                     alert('회원가입이 완료되었습니다.');
+                    push('/seller');
                 })
                 .with({ status: 422 }, async () => {
                     const jsonBody = await res.json();
@@ -137,7 +137,7 @@
 
 <!-- header -->
 <div id="header">
-    <h1 class="signup_title">회원가입 페이지</h1>
+    <h1 class="signup_title">판매자 회원가입 페이지</h1>
     <a href="" target="_get" title="Myshop 홈페이지 바로가기"
         ><img src="images/logo/logo_cut.png" id="logo" /></a
     >
@@ -159,7 +159,7 @@
                     class="int"
                     maxlength="20"
                     placeholder="아이디를 입력하세요."
-                    bind:value={userId}
+                    bind:value={sellerId}
                 />
                 <span class="" />
             </span>
@@ -176,7 +176,7 @@
                     class="int"
                     maxlength="20"
                     placeholder="******"
-                    bind:value={userPw}
+                    bind:value={sellerPw}
                 />
             </span>
             <span class="error_next_box" bind:this={error[1]} />

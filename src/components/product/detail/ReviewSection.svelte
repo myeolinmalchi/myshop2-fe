@@ -3,13 +3,14 @@
     export let review;
     export let product: object;
     import { onMount } from 'svelte';
+    import { URL } from '../../../store.ts';
 
     let reviews;
     let page;
     let pageCount;
     let reviewDetailsShown;
     onMount(async () => {
-        const res = await fetch(`api/v1/product/${productId}/reviews`);
+        const res = await fetch(`${URL}/api/v1/product/${productId}/reviews`);
         const jsonBody = await res.json();
         reviews = jsonBody.reviews.map((review) => {
             const date = new Date(review.reviewDate);
@@ -23,7 +24,7 @@
 
     const setPage = async (page) => {
         const res = await fetch(
-            `api/v1/product/${productId}/reviews?page=${page}`,
+            `${URL}/api/v1/product/${productId}/reviews?page=${page}`,
         );
         const jsonBody = await res.json();
         reviews = jsonBody.reviews.map((review) => {
@@ -57,7 +58,7 @@
             return;
         }
         const res = await fetch(
-            `api/v1/user/${userId}/product/${productId}/info`,
+            `${URL}/api/v1/user/${userId}/product/${productId}/info`,
             {
                 method: 'GET',
                 headers: {
@@ -92,7 +93,7 @@
     const onFileSelected = async (e) => {
         const image = e.target.files[0];
         const imageStr = await getBase64(image);
-        images = [...images, imageStr]
+        images = [...images, imageStr];
     };
 
     let rating: number;
@@ -100,14 +101,14 @@
     let content: string;
 
     const writeReview = async () => {
-        if(images.length === 0) {
-            alert("이미지를 하나 이상 업로드 해야합니다!")
-            return
+        if (images.length === 0) {
+            alert('이미지를 하나 이상 업로드 해야합니다!');
+            return;
         }
         const userId = localStorage.getItem('userId');
         const token = localStorage.getItem('token');
         if (userId && token) {
-            const res = await fetch(`api/v1/user/${userId}/review`, {
+            const res = await fetch(`${URL}/api/v1/user/${userId}/review`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -120,18 +121,18 @@
                     title,
                     content,
                     images,
-                    orderProductId: reviewProductInfo.orderProductId
+                    orderProductId: reviewProductInfo.orderProductId,
                 }),
             });
 
             if (res.status === 201) {
-                alert("리뷰가 작성되었습니다.")
+                alert('리뷰가 작성되었습니다.');
                 reviewWrite = false;
                 images = [];
             } else if (res.status === 400) {
-                alert("리뷰 작성에 실패했습니다.")
+                alert('리뷰 작성에 실패했습니다.');
             } else if (res.status === 401) {
-                alert("로그인이 필요합니다.")
+                alert('로그인이 필요합니다.');
                 reviewWrite = false;
                 images = [];
                 localStorage.clear();
@@ -147,7 +148,7 @@
             <p class="section-tit-des">
                 - 상품을 구매한 다른 사람들의 리뷰를 살펴보세요
             </p>
-            <button class="write-review-btn" on:click={writeReviewCheck}>
+            <button class="review-write-btn" on:click={writeReviewCheck}>
                 리뷰쓰기
             </button>
         </div>
@@ -264,7 +265,7 @@
                                 <ul>
                                     <!-- 추가되면 li>img를 추가해서 보일 수 있게 하면 좋을것 같아요! -->
                                     {#each images as image, idx}
-                                        <li><img src={image} alt={idx}/></li>
+                                        <li><img src={image} alt={idx} /></li>
                                     {/each}
                                 </ul>
                             </fieldset>
@@ -272,14 +273,18 @@
                                 <button
                                     class="close-btn"
                                     on:click={() => {
-                                        reviewWrite = false
+                                        reviewWrite = false;
                                         images = [];
-                                    }
-                                    }
+                                    }}
                                 >
                                     취소
                                 </button>
-                                <input type="button" on:click={writeReview} value="등록" />
+                                <button
+                                    class="review-submit-btn"
+                                    on:click={writeReview}
+                                >
+                                    등록
+                                </button>
                             </div>
                         </form>
                     </div>
@@ -295,8 +300,10 @@
                         <div class="review_info">
                             <!-- 별은 아이콘으로 대체 -->
                             <p class="review_stars">
-                                <span class="star_rating" style="width:{review.rating * 20}%">
-                                </span>
+                                <span
+                                    class="star_rating"
+                                    style="width:{review.rating * 20}%"
+                                />
                             </p>
                             <!-- 별은 아이콘으로 대체 -->
                             <span class="review_product-info"
@@ -324,7 +331,7 @@
                             on:click={() => {
                                 reviewDetailsShown[index] =
                                     !reviewDetailsShown[index];
-                                currentDetailImage = review.images[0]?.image
+                                currentDetailImage = review.images[0]?.image;
                             }}
                         >
                             <!-- 
@@ -397,229 +404,4 @@
 {/if}
 
 <style global>
-    .review-layer {
-        width: 100%;
-        height: 100%;
-        background-color: rgba(0, 0, 0, 0.6);
-
-        position: fixed;
-        top: 0;
-        left: 0;
-        z-index: 999999;
-
-        display: flex;
-        justify-content: center;
-        overflow-y: scroll;
-    }
-
-    .review-layer::-webkit-scrollbar {
-    }
-
-    .write-review .form-title {
-        margin-top: 24px;
-        padding: 16px 0;
-        border-radius: 8px;
-        background-color: #eee;
-
-        text-align: center;
-    }
-
-    .write-review .review-form-wrap {
-        margin: 24px 0;
-        padding: 40px;
-        border-radius: 24px;
-        background-color: #fff;
-    }
-
-    .write-review .review-form-wrap .product-info {
-        margin: 0 auto;
-        max-width: 400px;
-
-        display: flex;
-        align-items: center;
-        gap: 16px;
-    }
-    .write-review .product-info .product-thum {
-        min-width: 80px;
-        height: 80px;
-        overflow: hidden;
-        border: 1px solid #ddd;
-
-        display: flex;
-        justify-content: center;
-        align-items: center;
-    }
-    .write-review .product-info .product-thum img {
-        width: auto;
-        height: auto;
-        max-width: 100%;
-        max-height: 100%;
-    }
-    .write-review .product-info .product-name {
-        word-break: keep-all;
-        font-size: 1rem;
-    }
-    .write-review .product-info .product-name .option-name {
-        font-weight: 400;
-        color: #999;
-    }
-
-    .write-review .review-form-wrap form > fieldset {
-    }
-
-    .write-review .review-form-wrap form .star_rating {
-        margin-top: 16px;
-        background-color: rgb(250, 250, 250);
-        padding: 24px;
-        border-radius: 16px;
-    }
-    .write-review .star_rating .stars-title {
-        text-align: center;
-    }
-    .write-review .star_rating .stars {
-        margin-top: 16px;
-
-        display: flex;
-        justify-content: center;
-        flex-direction: row-reverse;
-        gap: 8px;
-    }
-
-    .write-review .star_rating .stars input {
-        display: none;
-    }
-    .write-review .star_rating .stars label {
-        width: 32px;
-        height: 32px;
-        display: block;
-        font-size: 0;
-        cursor: pointer;
-
-        background: url(../images/ico_star-grey.png) no-repeat center/ auto 100%;
-    }
-
-    .write-review .star_rating .stars input:hover ~ label {
-        background: url(../images/ico_star-yellow.png) no-repeat center/ auto
-            100%;
-    }
-
-    .write-review .star_rating .stars input[type='radio']:checked ~ label {
-        background: url(../images/ico_star-yellow.png) no-repeat center/ auto
-            100%;
-    }
-
-    .write-review .write-my-review label {
-        width: 432px;
-        margin-top: 24px;
-        line-height: 18px;
-        font-size: 18px;
-
-        display: block;
-    }
-
-    .write-review .write-my-review label .input-name {
-        margin-bottom: 16px;
-    }
-    .write-review .write-my-review label input,
-    .write-review .write-my-review label textarea {
-        width: 100%;
-        padding: 16px;
-        border-radius: 4px;
-        outline: none;
-        border: 1px solid #666;
-        box-sizing: border-box;
-        font-size: 1rem;
-    }
-    .write-review .write-my-review label textarea {
-        min-width: 100%;
-        max-width: 100%;
-        min-height: 180px;
-        max-height: 180px;
-    }
-
-    .write-review .upload-photo .add-photo label {
-        margin-top: 24px;
-        display: block;
-        padding: 16px;
-        border-radius: 4px;
-        text-align: center;
-        border: 2px dashed #ddd;
-
-        font-size: 1rem;
-        cursor: pointer;
-    }
-    .add-photo:firs .write-review .upload-photo .add-photo label:hover {
-        border-color: #aaa;
-    }
-
-    .write-review .upload-photo .add-photo input {
-        display: none;
-    }
-
-    .write-review .upload-photo ul {
-        display: flex;
-        gap: 8px;
-        margin-top: 16px;
-    }
-    .write-review .upload-photo ul li {
-        width: 80px;
-        height: 80px;
-        background-color: #eee;
-        border-radius: 4px;
-        overflow: hidden;
-        cursor: pointer;
-    }
-
-    .write-review .upload-photo ul li:hover {
-        outline: 2px solid #999;
-    }
-
-    .write-review .upload-photo ul li img {
-        width: auto;
-        height: auto;
-        max-width: 100%;
-        max-height: 100%;
-    }
-    .write-review .upload-photo .upload-notify {
-        font-size: 0.825rem;
-        margin-top: 8px;
-    }
-
-    .write-review .review-form-wrap .form-btn-wrap {
-        margin-top: 40px;
-        display: flex;
-        justify-content: center;
-        gap: 8px;
-    }
-
-    .write-review .review-form-wrap .form-btn-wrap input[type='submit'],
-    .write-review .review-form-wrap .form-btn-wrap .close-btn {
-        display: block;
-        width: 120px;
-        line-height: 48px;
-
-        border-radius: 4px;
-
-        font-weight: bold;
-        font-size: 1rem;
-        letter-spacing: -0.6px;
-    }
-    .write-review .review-form-wrap .form-btn-wrap .close-btn {
-        background-color: transparent;
-        border: 2px solid #ddd;
-    }
-    .write-review .review-form-wrap .form-btn-wrap .close-btn:hover {
-        border-color: #999;
-    }
-
-    .write-review .review-form-wrap .form-btn-wrap input[type='submit'] {
-        border: none;
-        background-color: #ddd;
-        cursor: pointer;
-    }
-
-    .write-review .review-form-wrap .form-btn-wrap input[type='submit']:hover {
-        background-color: #999;
-        color: #fff;
-    }
 </style>

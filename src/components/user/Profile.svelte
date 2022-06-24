@@ -1,6 +1,7 @@
 <script lang="ts">
     import { onMount } from 'svelte';
     import { pop } from 'svelte-spa-router';
+    import { URL } from '../../store.ts';
     export let state: string;
     export let userPw: string;
 
@@ -13,7 +14,7 @@
     onMount(async () => {
         const token = localStorage.getItem('token');
         if (token && userId) {
-            const res = await fetch(`api/v1/user/${userId}`, {
+            const res = await fetch(`${URL}/api/v1/user/${userId}`, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
@@ -42,7 +43,7 @@
         const userId = localStorage.getItem('userId');
         const token = localStorage.getItem('token');
         if (userId && token) {
-            const res = await fetch(`api/v1/user/${userId}`, {
+            const res = await fetch(`${URL}/api/v1/user/${userId}`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
@@ -93,15 +94,13 @@
         <div class="member-container">
             <h2 class="mem-check-tit">회원정보 관리</h2>
             <div class="tabs">
+                <input id="order-check" type="radio" name="tab_item" disabled />
+                <label class="tab_item" for="order-check"
+                    ><span on:click={setState}>주문조회</span></label
+                >
                 <input id="profile-info" type="radio" name="tab_item" checked />
                 <label class="tab_item" for="profile-info"
                     ><span>회원정보 관리</span></label
-                >
-                <input id="order-check" type="radio" name="tab_item" disabled />
-                <label class="tab_item" for="order-check"
-                    ><a href="javascript:void(0)" on:click={setState}
-                        >주문조회</a
-                    ></label
                 >
                 <div class="tab_content" id="profile_content">
                     <form class="mem-form">
@@ -177,7 +176,7 @@
     </div>
 {/if}
 
-<style global>
+<style>
     @font-face {
         font-family: 'Happiness-Sans-Regular';
         src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2205@1.0/Happiness-Sans-Regular.woff2')

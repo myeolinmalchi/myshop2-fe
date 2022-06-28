@@ -1,12 +1,39 @@
 <script lang="ts">
-    import { link, push, replace } from 'svelte-spa-router';
+    import { link, push } from 'svelte-spa-router';
     import { onMount } from 'svelte';
-    import { URL } from '../store.ts';
+    import { URL } from '../common.ts';
+    import type { Category } from '../common.ts';
 
     onMount(async () => {
-        const res = await fetch(`${URL}/api/v1/category/main`);
+        const res = await fetch(`${URL}/api/v1/category/main`, {
+            method: 'GET',
+            mode: 'cors',
+            headers: {
+                Accept: 'application/json',
+                'Content-Type': 'application/json',
+            },
+            credentials: 'include',
+        });
         const jsonBody = await res.json();
-        categories = jsonBody;
+        categories = await Promise.all(
+            jsonBody.map(async (category: Array<string>) => {
+                const code: string = category[0];
+                const name: string = category[1];
+                const res = await fetch(
+                    `${URL}/api/v1/category/${code}/children`,
+                );
+                const jsonBody = await res.json();
+                const children: Array<Category> = jsonBody.map(
+                    (category: Array<string>) => {
+                        return {
+                            code: category[0],
+                            name: category[1],
+                        };
+                    },
+                );
+                return { code, name, children };
+            }),
+        );
     });
 
     $: token = localStorage.getItem('token');
@@ -17,7 +44,7 @@
         token = '';
     };
 
-    let categories: object;
+    let categories: Array<Category>;
     let category: string;
     let keyword: string;
 
@@ -50,6 +77,7 @@
                 alt="logo"
                 width="240"
                 height="100"
+                on:click={() => push('/')}
             />
         </div>
 
@@ -58,7 +86,7 @@
                 <option value="0" selected>전체</option>
                 {#if categories}
                     {#each categories as category}
-                        <option value={category[0]}>{category[1]}</option>
+                        <option value={category.code}>{category.name}</option>
                     {/each}
                 {/if}
             </select>
@@ -82,80 +110,33 @@
     </header>
     <nav>
         <ul class="menu-hedaer">
-            <li>
-                <a class="category-tit" href="#">패션의류/잡화</a>
-                <ul class="submenu">
-                    <li><a class="sub-tit" href="#">여성패션</a></li>
-                    <li><a class="sub-tit" href="#">남성패션</a></li>
-                    <li><a class="sub-tit" href="#">남녀 공용 의류</a></li>
-                    <li><a class="sub-tit" href="#">유아동 패션</a></li>
-                </ul>
-            </li>
-
-            <li>
-                <a class="category-tit" href="#">뷰티</a>
-                <ul class="submenu">
-                    <li><a class="sub-tit" href="#">스킨케어</a></li>
-                    <li><a class="sub-tit" href="#">메이크업</a></li>
-                    <li><a class="sub-tit" href="#">향수</a></li>
-                    <li><a class="sub-tit" href="#">헤어</a></li>
-                    <li><a class="sub-tit" href="#">로드샵</a></li>
-                </ul>
-            </li>
-
-            <li>
-                <a class="category-tit" href="#">식품</a>
-                <ul class="submenu">
-                    <li><a class="sub-tit" href="#">냉동/냉장/간편요리</a></li>
-                    <li><a class="sub-tit" href="#">과일</a></li>
-                    <li><a class="sub-tit" href="#">과자/초콜릿/시리얼</a></li>
-                    <li><a class="sub-tit" href="#">생수/음료</a></li>
-                    <li><a class="sub-tit" href="#">쌀/잡곡</a></li>
-                </ul>
-            </li>
-
-            <li>
-                <a class="category-tit" href="#">전자기기</a>
-                <ul class="submenu">
-                    <li><a class="sub-tit" href="#">생활가전</a></li>
-                    <li><a class="sub-tit" href="#">청소기</a></li>
-                    <li><a class="sub-tit" href="#">냉장고</a></li>
-                    <li><a class="sub-tit" href="#">TV</a></li>
-                    <li><a class="sub-tit" href="#">게임기기</a></li>
-                </ul>
-            </li>
-
-            <li>
-                <a class="category-tit" href="#">주방용품</a>
-                <ul class="submenu">
-                    <li><a class="sub-tit" href="#">주방가전</a></li>
-                    <li><a class="sub-tit" href="#">냄비/프라이팬</a></li>
-                    <li><a class="sub-tit" href="#">주방잡화</a></li>
-                    <li><a class="sub-tit" href="#">이유/유아식기</a></li>
-                    <li><a class="sub-tit" href="#">보온/보냉용품</a></li>
-                </ul>
-            </li>
-            <li>
-                <a class="category-tit" href="#">반려동물 용품</a>
-                <ul class="submenu">
-                    <li><a class="sub-tit" href="#">사료</a></li>
-                    <li><a class="sub-tit" href="#">간식</a></li>
-                    <li><a class="sub-tit" href="#">산책용품</a></li>
-                    <li><a class="sub-tit" href="#">관상어 용품</a></li>
-                    <li><a class="sub-tit" href="#">소동물/가축용품</a></li>
-                </ul>
-            </li>
+            {#if categories}
+                {#each categories as category}
+                    <li>
+                        <a class="category-tit" href="/">{category.name}</a>
+                        <ul class="submenu">
+                            {#if category.children}
+                                {#each category.children as child}
+                                    <li>
+                                        <a class="sub-tit" href="/"
+                                            >{child.name}</a
+                                        >
+                                    </li>
+                                {/each}
+                            {/if}
+                        </ul>
+                    </li>
+                {/each}
+            {:else}
+                <li>
+                    <a class="category-tit" href="/">&nbsp;</a>
+                </li>
+            {/if}
         </ul>
     </nav>
 </div>
 
 <style>
-    .header {
-        display: flex;
-        justify-content: row;
-        margin-top: 20px;
-    }
-
     .header-container {
         margin: 0 auto;
         width: 1024px;
@@ -219,9 +200,10 @@
     .search > input {
         font-size: 16px;
         border: solid #cccccc 1px;
+        width: 55%;
+        padding: 9px;
         border: 0px;
         float: left;
-        width: 55%;
         height: 100%;
     }
 
@@ -282,7 +264,6 @@
         text-align: center;
         margin-top: 23px;
         color: white;
-
         border-radius: 8px;
     }
 
@@ -311,6 +292,7 @@
         padding: 14px 0;
         /* position:absolute가 위치를 잡는 기준점을 설정합니다. */
         position: relative;
+        z-index: 1;
     }
 
     nav > ul.menu-hedaer > li:hover > a {

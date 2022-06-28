@@ -1,15 +1,11 @@
 <script lang="ts">
     import Router from 'svelte-spa-router';
-    import { link } from 'svelte-spa-router';
-    import Header from './components/Header.svelte';
 
     import Main from './routes/Main.svelte';
 
     // routes for product
     import ProductSearch from './routes/product/ProductSearch.svelte';
     import ProductDetail from './routes/product/ProductDetail.svelte';
-    import ReviewWrite from './routes/product/ReviewWrite.svelte';
-    import QnaWrite from './routes/product/QnaWrite.svelte';
 
     // routes for user
     import Login from './routes/user/Login.svelte';
@@ -24,6 +20,8 @@
     import SellerRegist from './routes/seller/Regist.svelte';
     import ProductRegist from './routes/seller/ProductRegist.svelte';
 
+    import SellerMain from './routes/seller/Main.svelte';
+
     const routes = {
         '/': Main,
         '/product/search/:category/:keyword': ProductSearch,
@@ -32,6 +30,7 @@
         '/regist': Regist,
         '/cart': Carts,
         '/mypage': Mypage,
+        '/seller': SellerMain,
         '/seller/login': SellerLogin,
         '/seller/regist': SellerRegist,
         '/seller/product/regist': ProductRegist,

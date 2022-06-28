@@ -1,11 +1,11 @@
 <script lang="ts">
-    import ProductBox from '../../components/product/search/ProductBox.svelte';
     import Header from '../../components/Header.svelte';
-    import { onMount, afterUpdate, beforeUpdate, tick } from 'svelte';
-    import { URL } from '../../store.ts';
+    import { onMount } from 'svelte';
+    import { URL } from '../../common.ts';
+    import type { Product } from '../../common.ts';
 
     export let params = {};
-    let products: array;
+    let products: Array<Product>;
     let pageCount: number;
     let size: number;
     let page: number;

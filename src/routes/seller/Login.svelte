@@ -42,6 +42,7 @@
                     src="images/logo/logosmall2.png"
                     width="300"
                     height="120"
+                    on:click={() => push('/seller')}
                 />
             </div>
         </header>

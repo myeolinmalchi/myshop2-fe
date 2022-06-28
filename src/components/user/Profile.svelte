@@ -1,7 +1,7 @@
 <script lang="ts">
     import { onMount } from 'svelte';
     import { pop } from 'svelte-spa-router';
-    import { URL } from '../../store.ts';
+    import { URL } from '../../common.ts';
     export let state: string;
     export let userPw: string;
 

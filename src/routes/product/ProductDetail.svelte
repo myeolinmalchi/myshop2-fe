@@ -184,7 +184,7 @@
         color: var(--acent-color);
         font-weight: bold;
         font-size: 16px;
-        margin-left: 8px;
+        /*margin-left: 8px;*/
         background-color: #fff;
 
         vertical-align: top;

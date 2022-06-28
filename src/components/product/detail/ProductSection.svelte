@@ -1,11 +1,12 @@
 <script lang="ts">
     import { onMount } from 'svelte';
-    import { match, P } from 'ts-pattern';
-    import { URL } from '../../../store.ts';
+    import { match } from 'ts-pattern';
+    import { URL } from '../../../common.ts';
+    import type { Product } from '../../../common.ts';
     export let productId: number;
 
-    export let product: object;
-    let items: array;
+    export let product: Product;
+    let items: Array<any>;
     onMount(async () => {
         const res = await fetch(`${URL}/api/v1/product/${productId}`);
         product = await res.json();
@@ -41,6 +42,10 @@
     const addCart = async () => {
         const userId: string = localStorage.getItem('userId');
         const token: string = localStorage.getItem('token');
+        if (!userId || !token) {
+            alert('로그인 후 이용 가능합니다.');
+            return;
+        }
         const res = await fetch(`${URL}/api/v1/user/${userId}/cart`, {
             method: 'POST',
             headers: {
@@ -70,6 +75,8 @@
             )
             .exhaustive();
     };
+
+    let activeImageIndex: number = -1;
 </script>
 
 {#if product}
@@ -79,12 +86,14 @@
                 <div class="thum_img-list">
                     <ul>
                         <!-- 테스트 임시 썸네일 -->
-                        <li class="active">
-                            <img src={product.thumbnail} alt={product.name} />
-                        </li>
-                        {#each product.imageList as image}
-                            <li>
-                                <img src={image.image} alt={product.name} />
+                        {#each product.imageList as image, i}
+                            <li class={i == activeImageIndex ? 'active' : ''}>
+                                <img
+                                    src={image.image}
+                                    on:mouseover={() => (activeImageIndex = i)}
+                                    on:mouseout={() => (activeImageIndex = -1)}
+                                    alt={product.name}
+                                />
                             </li>
                         {/each}
                         <!-- //테스트 임시 썸네일 -->
@@ -96,7 +105,12 @@
                     <!-- <img src="@product.thumbnail" alt="" /> -->
 
                     <!-- 테스트 임시 썸네일 -->
-                    <img src={product.thumbnail} alt="" />
+                    <img
+                        src={activeImageIndex == -1
+                            ? product.thumbnail
+                            : product?.imageList[activeImageIndex].image}
+                        alt=""
+                    />
                     <!-- //테스트 임시 썸네일 -->
                 </div>
             </article>
@@ -188,7 +202,13 @@
                     >
                         장바구니담기
                     </button>
-                    <button class="buy-now_btn" type="button" value="order">
+                    <button
+                        class="buy-now_btn"
+                        type="button"
+                        value="order"
+                        on:click={() =>
+                            alert('구매는 장바구니를 통해서만 가능합니다.')}
+                    >
                         구매하기
                     </button>
                 </div>
@@ -275,11 +295,11 @@
         border-bottom: 1px solid #ddd;
     }
     .order_tit-box .product-name {
-        font-size: 18px;
+        font-size: 24px;
     }
 
     .order_tit-box .rating_star {
-        margin-left: 4px;
+        /*margin-left: 4px;*/
 
         height: 24px;
     }
@@ -305,7 +325,7 @@
         color: var(--acent-color);
         font-weight: bold;
         font-size: 16px;
-        margin-left: 8px;
+        /*margin-left: 8px;*/
         background-color: #fff;
 
         vertical-align: top;

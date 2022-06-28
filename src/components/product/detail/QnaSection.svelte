@@ -1,13 +1,13 @@
 <script lang="ts">
     import { onMount } from 'svelte';
-    import { URL } from '../../../store.ts';
+    import { URL } from '../../../common.ts';
     export let productId: number;
     export let qna;
 
     let qnaWrite: boolean = false;
-    let qnas;
-    let page;
-    let pageCount;
+    let qnas: Array<any>;
+    let page: number;
+    let pageCount: number;
     onMount(async () => {
         const res = await fetch(`${URL}/api/v1/product/${productId}/qnas`);
         const jsonBody = await res.json();
@@ -22,7 +22,7 @@
         pageCount = jsonBody.pageCount;
     });
 
-    const setPage = async (page) => {
+    const setPage = async (page: number) => {
         const res = await fetch(
             `${URL}/api/v1/product/${productId}/qnas?page=${page}`,
         );
@@ -43,7 +43,7 @@
     };
 
     const subPage = () => {
-        if (page > 1) setpage(page - 1);
+        if (page > 1) setPage(page - 1);
     };
 
     const qnaPopup = () => {

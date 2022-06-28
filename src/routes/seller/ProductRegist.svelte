@@ -1,96 +1,98 @@
 <script lang="ts">
-    import { URL } from '../../store.js'
-    import { onMount } from 'svelte'
-    import { push, pop } from 'svelte-spa-router'
-
+    import { URL } from '../../common.ts';
+    import { onMount } from 'svelte';
+    import { push } from 'svelte-spa-router';
 
     type Category = {
-        code: string,
-        name: string,
-    }
+        code: string;
+        name: string;
+    };
 
     let categories: Array<Array<Category>> = [];
-    
+
     onMount(async () => {
-        const sellerId = localStorage.getItem("sellerId")
-        const token = localStorage.getItem("token")
+        const sellerId = localStorage.getItem('sellerId');
+        const token = localStorage.getItem('token');
         if (!token || !sellerId) {
-            alert("로그인 후 이용 가능합니다.")
-            push("/seller/login")
-            return
+            alert('로그인 후 이용 가능합니다.');
+            push('/seller/login');
+            return;
         }
 
-        product.sellerId = sellerId
-        const res = await fetch(`${URL}/api/v1/category/main`)
+        product.sellerId = sellerId;
+        const res = await fetch(`${URL}/api/v1/category/main`);
         const jsonBody = await res.json();
         categories = [
-            jsonBody.map((value) => {
+            jsonBody.map((value: Array<string>) => {
                 const category: Category = {
                     code: value[0],
                     name: value[1],
-                }
+                };
                 return category;
-            })
-        ]
-    })
+            }),
+        ];
+    });
 
     const getChildren = async (code: string) => {
-        categories = categories.slice(0, code.length)
-        const res = await fetch(`${URL}/api/v1/category/${code}/children`)
+        categories = categories.slice(0, code.length);
+        const res = await fetch(`${URL}/api/v1/category/${code}/children`);
         const jsonBody = await res.json();
-        if(jsonBody !== null && jsonBody.length !== 0) {
+        if (jsonBody !== null && jsonBody.length !== 0) {
             categories = [
                 ...categories,
-                jsonBody.map((value) => {
+                jsonBody.map((value: Array<string>) => {
                     const category: Category = {
                         code: value[0],
                         name: value[1],
-                    }
+                    };
                     return category;
-                })
-            ]
+                }),
+            ];
         } else {
-            product.categoryCode = selectedCategories[selectedCategories.length-1]
-            console.log(product.categoryCode)
+            product.categoryCode =
+                selectedCategories[selectedCategories.length - 1];
+            console.log(product.categoryCode);
         }
-    }
+    };
 
     const registProduct = async () => {
-        const sellerId = localStorage.getItem("sellerId")
-        const token = localStorage.getItem("token")
+        const sellerId = localStorage.getItem('sellerId');
+        const token = localStorage.getItem('token');
         if (sellerId && token) {
-            const res = await fetch(`${URL}/api/v1/seller/${sellerId}/product`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: token
+            const res = await fetch(
+                `${URL}/api/v1/seller/${sellerId}/product`,
+                {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        Authorization: token,
+                    },
+                    body: JSON.stringify(product),
                 },
-                body: JSON.stringify(product)
-            })
+            );
             if (res.status === 200) {
-                const json = await res.json()
+                const json = await res.json();
                 if (json === true) {
-                    alert("상품을 등록했습니다.")
-                    push("/seller")
+                    alert('상품을 등록했습니다.');
+                    push('/seller');
                 } else {
-                    alert("상품 등록에 실패했습니다.")
-                    console.log(json.error)
+                    alert('상품 등록에 실패했습니다.');
+                    console.log(json.error);
                 }
             } else if (res.status === 401) {
-                alert("로그인이 필요합니다.")
-                push("/seller/login")
+                alert('로그인이 필요합니다.');
+                push('/seller/login');
             } else if (res.status === 400) {
-                alert("상품 등록에 실패했습니다.")
-                console.log(res)
+                alert('상품 등록에 실패했습니다.');
+                console.log(res);
             } else {
-                alert("상품 등록에 실패했습니다.")
+                alert('상품 등록에 실패했습니다.');
             }
         } else {
-            alert("로그인 후 이용 가능합니다.")
-            push("/seller/login")
+            alert('로그인 후 이용 가능합니다.');
+            push('/seller/login');
         }
-
-    }
+    };
 
     type Product = {
         name: string;
@@ -105,19 +107,19 @@
 
     type ProductImage = {
         image: string;
-        sequence: string;
+        sequence: number;
     };
 
     type ProductOption = {
         name: string;
-        optionSequence: string;
+        optionSequence: number;
         itemList: Array<ProductOptionItem>;
     };
 
     type ProductOptionItem = {
         name: string;
         itemSequence: number;
-        surcharge: string;
+        surcharge: number;
     };
 
     $: product.optionList = product.optionList;
@@ -131,7 +133,7 @@
                 itemList: [
                     {
                         name: '',
-                        itemSequence: '',
+                        itemSequence: 1,
                         surcharge: 0,
                     },
                 ],
@@ -140,13 +142,11 @@
     };
 
     const deleteOption = (index: number) => {
-        product.optionList = product.optionList.filter(
-            (value, i) => i != index,
-        );
+        product.optionList = product.optionList.filter((_, i) => i != index);
     };
 
     const appendItem = (index: number) => {
-        const last = product.optionList[index].itemList.length
+        const last = product.optionList[index].itemList.length;
         product.optionList[index].itemList = [
             ...product.optionList[index].itemList,
             {
@@ -160,7 +160,7 @@
     const deleteItem = (optionIndex: number, itemIndex: number) => {
         product.optionList[optionIndex].itemList = product.optionList[
             optionIndex
-        ].filter((value, i) => i != itemIndex);
+        ].itemList.filter((_, i) => i != itemIndex);
     };
 
     let product: Product = {
@@ -169,6 +169,7 @@
         categoryCode: '',
         detailInfo: '',
         thumbnail: '',
+        price: 0,
         optionList: [
             {
                 name: '',
@@ -185,43 +186,43 @@
         imageList: [],
     };
 
-    function getBase64(file) {
+    const getBase64 = (file: File): Promise<string | ArrayBuffer> => {
         return new Promise((resolve, reject) => {
-            const reader = new FileReader();
+            const reader: FileReader = new FileReader();
             reader.readAsDataURL(file);
             reader.onload = () => resolve(reader.result);
             reader.onerror = (error) => reject(error);
         });
-    }
+    };
 
     const setThumbnail = async (e) => {
-        const image = e.target.files[0];
-        const imageStr = await getBase64(image);
-        product.thumbnail = imageStr;
+        const image: File = e.target.files[0];
+        const imageStr: string | ArrayBuffer = await getBase64(image);
+        product.thumbnail = imageStr.toString();
     };
 
     const setDetailInfo = async (e) => {
-        const image = e.target.files[0];
-        const imageStr = await getBase64(image);
-        product.detailInfo = imageStr;
+        const image: File = e.target.files[0];
+        const imageStr: string | ArrayBuffer = await getBase64(image);
+        product.detailInfo = imageStr.toString();
     };
 
     const addImage = async (e) => {
-        const image = e.target.files[0];
-        const imageStr = await getBase64(image);
+        const image: File = e.target.files[0];
+        const imageStr: string | ArrayBuffer = await getBase64(image);
         product.imageList = [
             ...product.imageList,
             {
-                image: imageStr,
+                image: imageStr.toString(),
                 sequence: product.imageList.length,
             },
         ];
     };
 
-    let selectedCategories: array = [];
+    let selectedCategories: Array<string> = [];
 
     const deleteImage = (index: number) => {
-        product.imageList = product.imageList.filter((value, i) => i != index);
+        product.imageList = product.imageList.filter((_, i) => i != index);
     };
 </script>
 
@@ -237,12 +238,19 @@
                     <div class="category">
                         <strong>카테고리</strong>
                         {#each categories as category, index}
-                            <select required bind:value={selectedCategories[index]} on:change={() => getChildren(selectedCategories[index])}>
-                            <option value="none">===선택===</option>
-                            {#each category as option}
-                                <option value={option.code}>{option.name}</option>
-                            {/each}
-                        </select>
+                            <select
+                                required
+                                bind:value={selectedCategories[index]}
+                                on:change={() =>
+                                    getChildren(selectedCategories[index])}
+                            >
+                                <option value="none">===선택===</option>
+                                {#each category as option}
+                                    <option value={option.code}
+                                        >{option.name}</option
+                                    >
+                                {/each}
+                            </select>
                         {/each}
                     </div>
 
@@ -313,7 +321,9 @@
                             <!-- 등록한 상세이미지 미리보기 -->
                             <div class="detail-image-preview">
                                 <img
-                                    src={product.detailInfo}
+                                    src={product.detailInfo
+                                        ? product.detailInfo
+                                        : 'images/product-detail-thumb.png'}
                                     alt="상세이미지"
                                 />
                             </div>
@@ -321,7 +331,12 @@
                             <div class="thumbnail-preview">
                                 <!-- 등록한 대표이미지 미리보기 -->
                                 <div class="main-thumbnail-preview">
-                                    <img src={product.thumbnail} alt="썸네일" />
+                                    <img
+                                        src={product.thumbnail
+                                            ? product.thumbnail
+                                            : 'images/product-main-thumb.png'}
+                                        alt="썸네일"
+                                    />
                                 </div>
 
                                 <!-- 등록한 상품미리보기 이미지 확인 -->
@@ -346,7 +361,10 @@
                     </div>
                 </fieldset>
 
-                <button class="product-registration-btn" on:click={registProduct}>상품등록</button>
+                <button
+                    class="product-registration-btn"
+                    on:click={registProduct}>상품등록</button
+                >
 
                 <fieldset class="product-option">
                     <legend>상품 옵션 등록</legend>
@@ -372,11 +390,18 @@
                                     />
                                 </label>
 
-                                <button
-                                    class="item-add-btn"
-                                    on:click={() => appendItem(optionIdx)}
-                                    >항목 추가 +</button
-                                >
+                                <div class="item-btn-grp">
+                                    <button
+                                        class="item-add-btn"
+                                        on:click={() => appendItem(optionIdx)}
+                                        >항목 추가 +</button
+                                    >
+                                    <button
+                                        class="option-delete-btn"
+                                        on:click={() => deleteOption(optionIdx)}
+                                        >옵션 삭제 X</button
+                                    >
+                                </div>
 
                                 {#each option.itemList as item, itemIdx}
                                     <ul class="item-list">
@@ -396,6 +421,14 @@
                                                     bind:value={item.surcharge}
                                                 />
                                             </label>
+                                            <button
+                                                class="delite-item-btn"
+                                                on:click={() =>
+                                                    deleteItem(
+                                                        optionIdx,
+                                                        itemIdx,
+                                                    )}>항목삭제 X</button
+                                            >
                                         </li>
                                     </ul>
                                 {/each}
@@ -566,7 +599,7 @@
         height: 20px;
         border-radius: 15px;
         border: none;
-        background: url(../images/ico_close-btn.png) no-repeat center/12px;
+        background: url(../img/ico_close-btn.png) no-repeat center/12px;
         background-color: #ddd;
 
         font-size: 0;
@@ -616,13 +649,19 @@
         color: #333;
     }
 
+    .product-option .section-title .save-option-btn {
+        background-color: #999;
+        color: #fff;
+        font-weight: 600;
+    }
+
     .product-option .section-title button:hover {
         background-color: var(--acent-color);
     }
 
     .option-list label span {
         display: inline-block;
-        min-width: 100px;
+        margin-right: 16px;
     }
 
     .option-list .option {
@@ -643,7 +682,13 @@
         margin-bottom: 24px;
     }
 
-    .option-list .option .item-add-btn {
+    .option-list .option .item-btn-grp {
+        position: absolute;
+        top: 16px;
+        right: 24px;
+    }
+
+    .option-list .option .item-btn-grp button {
         padding: 4px 24px;
         background-color: #fff;
 
@@ -652,18 +697,39 @@
 
         line-height: 2;
         color: #333;
-
-        position: absolute;
-        top: 16px;
-        right: 24px;
     }
 
-    .option-list .option .item-add-btn:hover {
+    .option-list .option .item-btn-grp .option-delite-btn {
+        background-color: #999;
+        color: #fff;
+        margin-left: 8px;
+    }
+
+    .option-list .option .item-btn-grp button:hover {
         outline: 2px solid var(--acent-color);
     }
 
     .option-list .option .item-list .item {
         display: flex;
-        gap: 32px;
+        gap: 24px;
+        margin-bottom: 16px;
+    }
+
+    .option-list .option .item-list .item label {
+        margin-bottom: 0;
+    }
+
+    .option-list .option .item-list .delite-item-btn {
+        padding: 0 16px;
+        border: none;
+
+        background-color: #fff;
+        border-radius: 4px;
+
+        color: #333;
+    }
+
+    .option-list .option .item-list .delite-item-btn:hover {
+        outline: 2px solid var(--acent-color);
     }
 </style>

@@ -1,14 +1,14 @@
 <script lang="ts">
     import { onMount } from 'svelte';
     import { pop } from 'svelte-spa-router';
-    import { URL } from '../../store.ts';
+    import { URL } from '../../common.ts';
     export let state: string;
 
     const setState = () => {
         state = 'profile';
     };
 
-    let orders: array;
+    let orders: Array<any>;
 
     $: orders = orders?.map((order) => {
         order.products = order.products.map((product) => {

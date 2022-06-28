@@ -1,6 +1,7 @@
 <script lang="ts">
     import { match } from 'ts-pattern';
     import { URL } from '../../store.ts';
+    import { push, link } from 'svelte-spa-router';
 
     let userId: string;
     let userPw: string;
@@ -8,7 +9,7 @@
     let email: string;
     let phonenumber: string;
 
-    let error: array = [];
+    let error: Array<HTMLElement> = [];
 
     function checkId(userId: string) {
         const idPattern = /^[a-z]+[a-z0-9]{5,19}$/;
@@ -34,8 +35,7 @@
             error[1].style.display = 'block';
             return false;
         } else if (!pwPattern.test(userPw)) {
-            error[1].innerHTML =
-                '8~16자 영문 대 소문자, 숫자, 특수문자를 사용하세요.';
+            error[1].innerHTML = '8~16자의 영문 및 숫자를 사용해 주세요.';
             error[1].style.display = 'block';
             return false;
         } else {
@@ -93,7 +93,7 @@
     }
 
     const regist = async () => {
-        const validation: object = {
+        const validation = {
             userId: checkId(userId),
             userPw: checkPw(userPw),
             name: checkName(name),
@@ -124,12 +124,16 @@
             match(res)
                 .with({ status: 201 }, () => {
                     alert('회원가입이 완료되었습니다.');
+                    push('/');
                 })
                 .with({ status: 422 }, async () => {
                     const jsonBody = await res.json();
                     alert(jsonBody.error);
                 })
-                .with({ status: 400 }, () => alert('회원가입에 실패했습니다.'))
+                .with({ status: 400 }, async () => {
+                    const jsonBody = await res.json();
+                    alert(jsonBody.error);
+                })
                 .exhaustive();
         }
     };
@@ -138,7 +142,7 @@
 <!-- header -->
 <div id="header">
     <h1 class="signup_title">회원가입 페이지</h1>
-    <a href="" target="_get" title="Myshop 홈페이지 바로가기"
+    <a href="/" use:link target="_get" title="Myshop 홈페이지 바로가기"
         ><img src="images/logo/logo_cut.png" id="logo" /></a
     >
 </div>

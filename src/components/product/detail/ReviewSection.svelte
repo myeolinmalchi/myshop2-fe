@@ -3,7 +3,7 @@
     export let review;
     export let product: object;
     import { onMount } from 'svelte';
-    import { URL } from '../../../store.ts';
+    import { URL } from '../../../common.ts';
 
     let reviews;
     let page;

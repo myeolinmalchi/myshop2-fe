@@ -1,7 +1,7 @@
 <script lang="ts">
     import { onMount } from 'svelte';
-    import { link, push, replace, pop } from 'svelte-spa-router';
-    import { URL } from '../../store.ts';
+    import { pop } from 'svelte-spa-router';
+    import { URL } from '../../common.ts';
 
     const refreshCart = async () => {
         let userId = localStorage.getItem('userId');
@@ -26,8 +26,8 @@
         }
     };
 
-    let carts: array;
-    let cartChecked: array = [];
+    let carts: Array<any>;
+    let cartChecked: Array<boolean> = [];
     $: priceWithComma = carts?.map((cart) => {
         return cart.price
             ?.toString()
@@ -185,7 +185,7 @@
                                 ><div class="image-box">
                                     <img
                                         src={cart.thumbnail}
-                                        alt={index}
+                                        alt={index.toString()}
                                         height="120px"
                                     />
                                 </div></td
@@ -199,18 +199,20 @@
                                 <div class="counter">
                                     <button
                                         class="btn"
-                                        on:click={addQuantity(
-                                            cart.cartId,
-                                            cart.quantity,
-                                        )}>+</button
+                                        on:click={() =>
+                                            addQuantity(
+                                                cart.cartId,
+                                                cart.quantity,
+                                            )}>+</button
                                     >
                                     <div class="count">{cart.quantity}</div>
                                     <button
                                         class="btn"
-                                        on:click={subQuantity(
-                                            cart.cartId,
-                                            cart.quantity,
-                                        )}>-</button
+                                        on:click={() =>
+                                            subQuantity(
+                                                cart.cartId,
+                                                cart.quantity,
+                                            )}>-</button
                                     >
                                 </div>
                             </td>
@@ -225,7 +227,7 @@
                             <td>
                                 <div
                                     class="delete"
-                                    on:click={deleteCart(cart.cartId)}
+                                    on:click={() => deleteCart(cart.cartId)}
                                 >
                                     <svg
                                         width="16"
